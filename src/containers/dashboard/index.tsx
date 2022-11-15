@@ -9,8 +9,7 @@ const Dashboard = () => {
   const [APIData, setAPIData] = useState([]);
   const [deleted, setDeleted] = useState(false)
   const [checkedId, setCheckedId] = useState<any>([])
-
-  console.log(checkedId)
+  const [enableDeleteAll, setEnableDeleteAll] = useState<boolean>(false)
 
   useEffect(() => {
     axios.get('https://geektrust.s3-ap-southeast-1.amazonaws.com/adminui-problem/members.json').then((response) => {
@@ -36,6 +35,8 @@ const Dashboard = () => {
   });
 
   const handleCheck = (e: any) => {
+    setEnableDeleteAll(!enableDeleteAll)
+    console.log(e.target.checked, 'e')
     const eventIdCapture = e.target.value;
     if (e.target.checked === true) {
       setCheckedId((prev: any) => [...prev, eventIdCapture])
@@ -61,7 +62,9 @@ const Dashboard = () => {
             <Form.Control type="search" placeholder='Search by name, email or role' />
           </Form.Group>
         </Form>
+        {/* {enableDeleteAll && */}
         <Button className='btn btn-danger mb-3' onClick={handleDeleteSelected}>Delete Selected</Button>
+        {/* } */}
         <Table striped bordered hover className='text-center'>
           <thead>
             <tr>
