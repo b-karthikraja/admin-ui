@@ -15,6 +15,7 @@ const Dashboard = () => {
   const [filtered, setFilterd] = useState([]);
   const [result, setResult] = useState("");
   const [isEdit, setEdit] = useState(false);
+  const [inputVal, setInputVal] = useState('')
 
   useEffect(() => {
     axios.get('https://geektrust.s3-ap-southeast-1.amazonaws.com/adminui-problem/members.json').then((response) => {
@@ -59,7 +60,8 @@ const Dashboard = () => {
   }
 
   useEffect(() => {
-    const results = filtered.filter((res: any) => res.name.toLowerCase().includes(result));
+    const results = filtered.filter((res: any) =>
+      res.name.includes(result) || res.name.toLowerCase().includes(result));
     setAPIData(results)
   }, [result])
 
@@ -130,10 +132,10 @@ const Dashboard = () => {
                   <tr key={data.id}>
                     <td><Form.Check value={data.id} onChange={(e) => handleCheck(e)} /></td>
                     <td>
-                      <input type="text" value={data.name} onKeyUp={(e) => escapeFromEdit(e)} />
+                      <input type="text" value={data.name} onChange={(e) => setInputVal(e.target.value)} onKeyUp={(e) => escapeFromEdit(e)} />
                     </td>
                     <td>
-                      <input type="text" value={data.email} onKeyUp={(e) => escapeFromEdit(e)} /></td>
+                      <input type="text" value={data.email} onChange={(e) => setInputVal(e.target.value)} onKeyUp={(e) => escapeFromEdit(e)} /></td>
                     <td>
                       <select id="role" name="role">
                         <option>{data.role}</option>
