@@ -6,9 +6,10 @@ import deleteIcon from '../../assets/images/delete.png'
 import checkedIcon from '../../assets/images/checked.png'
 import cancelIcon from '../../assets/images/cancel.png'
 import axios from 'axios';
+import header from '../../data/header.json'
 
 const Dashboard = () => {
-  const [APIData, setAPIData] = useState([]);
+  const [APIData, setAPIData] = useState<any>([]);
   const [deleted, setDeleted] = useState(false)
   const [checkedId, setCheckedId] = useState<any>([])
   const [enableDeleteAll, setEnableDeleteAll] = useState<boolean>(false)
@@ -16,6 +17,8 @@ const Dashboard = () => {
   const [result, setResult] = useState("");
   const [isEdit, setEdit] = useState(false);
   const [inputVal, setInputVal] = useState('')
+  const [checkedAll, setCheckedAll] = useState<boolean>(false)
+
 
   useEffect(() => {
     axios.get('https://geektrust.s3-ap-southeast-1.amazonaws.com/adminui-problem/members.json').then((response) => {
@@ -45,7 +48,7 @@ const Dashboard = () => {
     const eventIdCapture = e.target.value;
 
     if (eventIdCapture > 0) {
-      setEnableDeleteAll(!enableDeleteAll)
+      setEnableDeleteAll(true)
     }
     if (e.target.checked === true) {
       setCheckedId((prev: any) => [...prev, eventIdCapture])
@@ -53,16 +56,19 @@ const Dashboard = () => {
   }
 
   const handleDeleteSelected = () => {
-    const stringArray = checkedId
-    const numberArray = stringArray.map(Number);
     const getUsers = APIData;
-    // setAPIData(filteredUser)
+    const stringArray = checkedId
+    const filteredUser = getUsers.filter((e: any) => {
+      return stringArray.indexOf(e.id) < 0;
+    });
+    setAPIData(filteredUser)
   }
 
   useEffect(() => {
-    const results = filtered.filter((res: any) =>
-      res.name.includes(result) || res.name.toLowerCase().includes(result));
-    setAPIData(results)
+    const nameResults = filtered.filter((res: any) => res.name.toLowerCase().includes(result.toLowerCase()));
+    const emailResults = filtered.filter((res: any) => res.email.toLowerCase().includes(result.toLowerCase()));
+    const roleResults = filtered.filter((res: any) => res.role.toLowerCase().includes(result.toLowerCase()));
+    // setAPIData(...nameResults, ...emailResults, ...roleResults)
   }, [result])
 
   const handleSearch = (e: any) => {
@@ -79,6 +85,13 @@ const Dashboard = () => {
     }
   }
 
+  const selectAllCheckbox = (e: any) => {
+    if (e.target.checked) {
+      setCheckedAll(true)
+    } else {
+      setCheckedAll(false)
+    }
+  }
   return (
     <>
       <Container>
@@ -87,17 +100,16 @@ const Dashboard = () => {
             <Form.Control type="search" placeholder='Search by name, email or role' onChange={(e) => { handleSearch(e) }} />
           </Form.Group>
         </Form>
-        {enableDeleteAll ?
+        {enableDeleteAll || checkedAll ?
           <Button className='btn btn-danger mb-3' onClick={handleDeleteSelected}>Delete Selected</Button>
           : <></>}
         <Table striped bordered hover className='text-center'>
           <thead>
             <tr>
-              <th><Form.Check /></th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Actions</th>
+              <th><Form.Check onChange={(e) => selectAllCheckbox(e)} /></th>
+              {header.map((list) => (
+                <th key={list.id}>{list.label}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -105,7 +117,10 @@ const Dashboard = () => {
               if (!isEdit) {
                 return (
                   <tr key={data.id}>
-                    <td><Form.Check value={data.id} onChange={(e) => handleCheck(e)} /></td>
+                    <td>
+                      {checkedAll ? <Form.Check value={data.id} onChange={(e) => handleCheck(e)} checked={checkedAll} />
+                        : <Form.Check value={data.id} onChange={(e) => handleCheck(e)} />}
+                    </td>
                     <td>{data.name}</td>
                     <td className='td-email' onClick={() => window.location.href = `mailto:${data.email}`}>{data.email}</td>
                     <td className='td-role'>{data.role}</td>
@@ -147,10 +162,6 @@ const Dashboard = () => {
                           placement="left"
                           overlay={<Tooltip id="button-tooltip-2">Save</Tooltip>}
                         ><img src={checkedIcon} onClick={() => editFunction(data.id)} alt="checkedIcon" /></OverlayTrigger>
-                        <OverlayTrigger
-                          placement="top"
-                          overlay={<Tooltip id="button-tooltip-2">Delete</Tooltip>}
-                        ><img src={deleteIcon} onClick={() => deleteFunction(data.id)} alt="deleteIcon" /></OverlayTrigger>
                         <OverlayTrigger
                           placement="right"
                           overlay={<Tooltip id="button-tooltip-2">Cancel</Tooltip>}
