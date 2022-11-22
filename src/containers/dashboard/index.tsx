@@ -7,9 +7,10 @@ import checkedIcon from '../../assets/images/checked.png'
 import cancelIcon from '../../assets/images/cancel.png'
 import axios from 'axios';
 import header from '../../data/header.json'
+import PaginationComp from '../pagination';
 
 const Dashboard = () => {
-  const [APIData, setAPIData] = useState<any>([]);
+  const [jsonData, setJsonData] = useState<any>([]);
   const [deleted, setDeleted] = useState(false)
   const [checkedId, setCheckedId] = useState<any>([])
   const [enableDeleteAll, setEnableDeleteAll] = useState<boolean>(false)
@@ -22,19 +23,19 @@ const Dashboard = () => {
 
   useEffect(() => {
     axios.get('https://geektrust.s3-ap-southeast-1.amazonaws.com/adminui-problem/members.json').then((response) => {
-      setAPIData(response.data)
+      setJsonData(response.data)
       setFilterd(response.data)
     })
   }, [])
 
   const deleteFunction = (id: number) => {
     setDeleted(!deleted)
-    const getUsers = APIData
+    const getUsers = jsonData
     const filterUser = getUsers.filter((list: any) => list.id !== id);
-    setAPIData(filterUser)
+    setJsonData(filterUser)
   }
 
-  APIData.sort(function (a: any, b: any) {
+  jsonData.sort(function (a: any, b: any) {
     if (a.name < b.name) {
       return -1;
     }
@@ -56,19 +57,26 @@ const Dashboard = () => {
   }
 
   const handleDeleteSelected = () => {
-    const getUsers = APIData;
+    const getUsers = jsonData;
     const stringArray = checkedId
     const filteredUser = getUsers.filter((e: any) => {
       return stringArray.indexOf(e.id) < 0;
     });
-    setAPIData(filteredUser)
+    setJsonData(filteredUser)
   }
 
   useEffect(() => {
     const nameResults = filtered.filter((res: any) => res.name.toLowerCase().includes(result.toLowerCase()));
     const emailResults = filtered.filter((res: any) => res.email.toLowerCase().includes(result.toLowerCase()));
     const roleResults = filtered.filter((res: any) => res.role.toLowerCase().includes(result.toLowerCase()));
-    // setAPIData(...nameResults, ...emailResults, ...roleResults)
+    if (nameResults.length > 0) {
+      setJsonData([...nameResults])
+    }
+    if (emailResults.length > 0) {
+      setJsonData([...emailResults])
+    } else {
+      setJsonData([...roleResults])
+    }
   }, [result])
 
   const handleSearch = (e: any) => {
@@ -113,7 +121,7 @@ const Dashboard = () => {
             </tr>
           </thead>
           <tbody>
-            {APIData.length > 0 ? APIData.map((data: any) => {
+            {jsonData.length > 0 ? jsonData.map((data: any) => {
               if (!isEdit) {
                 return (
                   <tr key={data.id}>
@@ -177,6 +185,7 @@ const Dashboard = () => {
                 <td colSpan={5}>No Details Found!</td></tr>}
           </tbody>
         </Table>
+        <PaginationComp />
       </Container>
     </>
   )
