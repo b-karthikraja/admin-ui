@@ -1,16 +1,69 @@
-import { Pagination } from 'react-bootstrap';
+interface IPagination {
+  totalPages: number,
+  currentPage: number,
+  setCurrentPage: any
+}
 
-const PaginationComp = () => {
+const PaginationComp = ({ totalPages, currentPage, setCurrentPage }: IPagination) => {
+  const pageNumbers = [...Array(totalPages + 1).keys()].slice(1)
+
+  const nextPage = () => {
+    if (currentPage !== totalPages) setCurrentPage(currentPage + 1)
+  }
+  const prevPage = () => {
+    if (currentPage !== 1) setCurrentPage(currentPage - 1)
+  }
+  const startPage = () => {
+    if (currentPage !== 1) setCurrentPage(currentPage - currentPage + 1)
+  }
+  const endPage = () => {
+    setCurrentPage(totalPages)
+  }
   return (
-    <div>
-      <Pagination>
-        <Pagination.First />
-        <Pagination.Prev />
-        <Pagination.Item>{1}</Pagination.Item>
-        <Pagination.Next />
-        <Pagination.Last />
-      </Pagination>
-    </div>
+    <nav>
+      <ul className='pagination justify-content-center pagination-ul'>
+        <li className='page-item'>
+          <a className='page-link'
+            onClick={startPage}
+          >
+            First
+          </a>
+        </li>
+        <li className='page-item'>
+          <a className='page-link'
+            onClick={prevPage}
+          >
+            Previous
+          </a>
+        </li>
+        {pageNumbers.map(noOfPage => (
+          <li key={noOfPage}
+            className={`page-item ${currentPage === noOfPage ? 'active' : ''} `} >
+
+            <a onClick={() => setCurrentPage(noOfPage)}
+              className='page-link'
+            >
+
+              {noOfPage}
+            </a>
+          </li>
+        ))}
+        <li className='page-item'>
+          <a className='page-link'
+            onClick={nextPage}
+          >
+            Next
+          </a>
+        </li>
+        <li className='page-item'>
+          <a className='page-link'
+            onClick={endPage}
+          >
+            Last
+          </a>
+        </li>
+      </ul>
+    </nav>
   )
 }
 

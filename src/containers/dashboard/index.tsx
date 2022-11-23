@@ -8,24 +8,31 @@ import cancelIcon from '../../assets/images/cancel.png'
 import axios from 'axios';
 import header from '../../data/header.json'
 import PaginationComp from '../pagination';
+import Loader from '../loader';
 
 const Dashboard = () => {
   const [jsonData, setJsonData] = useState<any>([]);
   const [deleted, setDeleted] = useState(false)
   const [checkedId, setCheckedId] = useState<any>([])
   const [enableDeleteAll, setEnableDeleteAll] = useState<boolean>(false)
-  const [filtered, setFilterd] = useState([]);
+  const [filtered, setFiltered] = useState([]);
   const [result, setResult] = useState("");
   const [isEdit, setEdit] = useState(false);
   const [inputVal, setInputVal] = useState('')
   const [checkedAll, setCheckedAll] = useState<boolean>(false)
 
+  const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
     axios.get('https://geektrust.s3-ap-southeast-1.amazonaws.com/adminui-problem/members.json').then((response) => {
       setJsonData(response.data)
-      setFilterd(response.data)
+      setFiltered(response.data)
+      setLoading(false);
     })
+      .catch(() => {
+        alert('Check your internet connection & refresh the page for retrieving the data')
+      })
   }, [])
 
   const deleteFunction = (id: number) => {
@@ -69,13 +76,15 @@ const Dashboard = () => {
     const nameResults = filtered.filter((res: any) => res.name.toLowerCase().includes(result.toLowerCase()));
     const emailResults = filtered.filter((res: any) => res.email.toLowerCase().includes(result.toLowerCase()));
     const roleResults = filtered.filter((res: any) => res.role.toLowerCase().includes(result.toLowerCase()));
+    console.log(nameResults, 'nameResults')
     if (nameResults.length > 0) {
       setJsonData([...nameResults])
-    }
-    if (emailResults.length > 0) {
-      setJsonData([...emailResults])
     } else {
-      setJsonData([...roleResults])
+      if (emailResults.length > 0) {
+        setJsonData([...emailResults])
+      } else {
+        setJsonData([...roleResults])
+      }
     }
   }, [result])
 
@@ -100,93 +109,108 @@ const Dashboard = () => {
       setCheckedAll(false)
     }
   }
+
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [recordsPerPage] = useState(10);
+
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentRecords = jsonData.slice(indexOfFirstRecord, indexOfLastRecord);
+  const totalPages = Math.ceil(jsonData.length / recordsPerPage)
+
   return (
     <>
-      <Container>
-        <Form>
-          <Form.Group className="mb-3 mt-3" controlId="formBasicEmail">
-            <Form.Control type="search" placeholder='Search by name, email or role' onChange={(e) => { handleSearch(e) }} />
-          </Form.Group>
-        </Form>
-        {enableDeleteAll || checkedAll ?
-          <Button className='btn btn-danger mb-3' onClick={handleDeleteSelected}>Delete Selected</Button>
-          : <></>}
-        <Table striped bordered hover className='text-center'>
-          <thead>
-            <tr>
-              <th><Form.Check onChange={(e) => selectAllCheckbox(e)} /></th>
-              {header.map((list) => (
-                <th key={list.id}>{list.label}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {jsonData.length > 0 ? jsonData.map((data: any) => {
-              if (!isEdit) {
-                return (
-                  <tr key={data.id}>
-                    <td>
-                      {checkedAll ? <Form.Check value={data.id} onChange={(e) => handleCheck(e)} checked={checkedAll} />
-                        : <Form.Check value={data.id} onChange={(e) => handleCheck(e)} />}
-                    </td>
-                    <td>{data.name}</td>
-                    <td className='td-email' onClick={() => window.location.href = `mailto:${data.email}`}>{data.email}</td>
-                    <td className='td-role'>{data.role}</td>
-                    <td>
-                      <div className='icons-size'>
-                        <OverlayTrigger
-                          placement="left"
-                          overlay={<Tooltip id="button-tooltip-2">Edit</Tooltip>}
-                        >
-                          <img src={editIcon} onClick={() => editFunction(data.id)} alt="editIcon" />
-                        </OverlayTrigger>
-                        <OverlayTrigger
-                          placement="right"
-                          overlay={<Tooltip id="button-tooltip-2">Delete</Tooltip>}
-                        >
-                          <img src={deleteIcon} onClick={() => deleteFunction(data.id)} alt="deleteIcon" />
-                        </OverlayTrigger>
-                      </div>
-                    </td>
-                  </tr>
+      {
+        loading ? <div className='spin-loader'><Loader /> </div> :
+          <Container>
+            <Form>
+              <Form.Group className="mb-3 mt-3" controlId="formBasicEmail">
+                <Form.Control type="search" placeholder='Search by name, email or role' onChange={(e) => { handleSearch(e) }} />
+              </Form.Group>
+            </Form>
+            {enableDeleteAll || checkedAll ?
+              <Button className='btn btn-danger mb-3' onClick={handleDeleteSelected}>Delete Selected</Button>
+              : <></>}
+            <Table striped bordered hover className='text-center'>
+              <thead>
+                <tr>
+                  <th><Form.Check onChange={(e) => selectAllCheckbox(e)} /></th>
+                  {header.map((list) => (
+                    <th key={list.id}>{list.label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {currentRecords.length > 0 ? currentRecords.map((data: any) => {
+                  if (!isEdit) {
+                    return (
+                      <tr key={data.id}>
+                        <td>
+                          {checkedAll ? <Form.Check value={data.id} onChange={(e) => handleCheck(e)} checked={checkedAll} />
+                            : <Form.Check value={data.id} onChange={(e) => handleCheck(e)} />}
+                        </td>
+                        <td>{data.name}</td>
+                        <td className='td-email' onClick={() => window.location.href = `mailto:${data.email}`}>{data.email}</td>
+                        <td className='td-role'>{data.role}</td>
+                        <td>
+                          <div className='icons-size'>
+                            <OverlayTrigger
+                              placement="left"
+                              overlay={<Tooltip id="button-tooltip-2">Edit</Tooltip>}
+                            >
+                              <img src={editIcon} onClick={() => editFunction(data.id)} alt="editIcon" />
+                            </OverlayTrigger>
+                            <OverlayTrigger
+                              placement="right"
+                              overlay={<Tooltip id="button-tooltip-2">Delete</Tooltip>}
+                            >
+                              <img src={deleteIcon} onClick={() => deleteFunction(data.id)} alt="deleteIcon" />
+                            </OverlayTrigger>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  } else if (isEdit) {
+                    return (
+                      <tr key={data.id}>
+                        <td><Form.Check value={data.id} onChange={(e) => handleCheck(e)} /></td>
+                        <td>
+                          <input type="text" value={data.name} onChange={(e) => setInputVal(e.target.value)} onKeyUp={(e) => escapeFromEdit(e)} />
+                        </td>
+                        <td>
+                          <input type="text" value={data.email} onChange={(e) => setInputVal(e.target.value)} onKeyUp={(e) => escapeFromEdit(e)} /></td>
+                        <td>
+                          <select id="role" name="role">
+                            <option>{data.role}</option>
+                          </select>
+                        </td>
+                        <td>
+                          <div className='icons-size'>
+                            <OverlayTrigger
+                              placement="left"
+                              overlay={<Tooltip id="button-tooltip-2">Save</Tooltip>}
+                            ><img src={checkedIcon} onClick={() => editFunction(data.id)} alt="checkedIcon" /></OverlayTrigger>
+                            <OverlayTrigger
+                              placement="right"
+                              overlay={<Tooltip id="button-tooltip-2">Cancel</Tooltip>}
+                            ><img src={cancelIcon} alt="cancelIcon" className='ms-2' onClick={() => { setEdit(!isEdit) }} /></OverlayTrigger>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  }
+                }
                 )
-              } else if (isEdit) {
-                return (
-                  <tr key={data.id}>
-                    <td><Form.Check value={data.id} onChange={(e) => handleCheck(e)} /></td>
-                    <td>
-                      <input type="text" value={data.name} onChange={(e) => setInputVal(e.target.value)} onKeyUp={(e) => escapeFromEdit(e)} />
-                    </td>
-                    <td>
-                      <input type="text" value={data.email} onChange={(e) => setInputVal(e.target.value)} onKeyUp={(e) => escapeFromEdit(e)} /></td>
-                    <td>
-                      <select id="role" name="role">
-                        <option>{data.role}</option>
-                      </select>
-                    </td>
-                    <td>
-                      <div className='icons-size'>
-                        <OverlayTrigger
-                          placement="left"
-                          overlay={<Tooltip id="button-tooltip-2">Save</Tooltip>}
-                        ><img src={checkedIcon} onClick={() => editFunction(data.id)} alt="checkedIcon" /></OverlayTrigger>
-                        <OverlayTrigger
-                          placement="right"
-                          overlay={<Tooltip id="button-tooltip-2">Cancel</Tooltip>}
-                        ><img src={cancelIcon} alt="cancelIcon" className='ms-2' onClick={() => { setEdit(!isEdit) }} /></OverlayTrigger>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              }
-            }
-            )
-              : <tr className='text-center'>
-                <td colSpan={5}>No Details Found!</td></tr>}
-          </tbody>
-        </Table>
-        <PaginationComp />
-      </Container>
+                  : <tr className='text-center'>
+                    <td colSpan={5}>No Details Found!</td></tr>}
+              </tbody>
+            </Table>
+            <PaginationComp totalPages={totalPages}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage} />
+          </Container>
+      }
     </>
   )
 }
