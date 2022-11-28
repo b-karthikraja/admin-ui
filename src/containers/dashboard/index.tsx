@@ -20,12 +20,7 @@ const Dashboard = () => {
   const [inputVal, setInputVal] = useState('')
   const [checkedAll, setCheckedAll] = useState<boolean>(false)
   const [singleData, setSingleData] = useState([])
-  const [userDetails, setUserDetails] = useState({
-    id: "",
-    name: "",
-    email: "",
-    role: ""
-  })
+
   //Modal
   const [show, setShow] = useState(false);
   const handleClose = () => setShow(false);
@@ -91,12 +86,10 @@ const Dashboard = () => {
     const roleResults = filtered.filter((res: any) => res.role.toLowerCase().includes(result.toLowerCase()));
     if (nameResults.length > 0) {
       setJsonData([...nameResults])
+    } else if (emailResults.length > 0) {
+      setJsonData([...emailResults])
     } else {
-      if (emailResults.length > 0) {
-        setJsonData([...emailResults])
-      } else {
-        setJsonData([...roleResults])
-      }
+      setJsonData([...roleResults])
     }
   }, [result])
 
@@ -107,6 +100,7 @@ const Dashboard = () => {
   const editFunction = (data: any) => {
     setSingleData(data)
     setShow(!show)
+    setSelectedUser(data)
   }
 
   const selectAllCheckbox = (e: any) => {
@@ -118,21 +112,16 @@ const Dashboard = () => {
   }
 
   const handleUpdatedUser = () => {
-    if (selectedUser?.id === (users[selectedUser?.id - 1])?.id) {
-      users[selectedUser.id - 1] = selectedUser;
-      setUsers(users)
+    if (selectedUser?.id === (jsonData[selectedUser?.id])?.id) {
+      jsonData[selectedUser.id] = selectedUser;
+      setJsonData(jsonData)
     }
+    setShow(false)
   }
 
   useEffect(() => {
     handleUpdatedUser()
-  }, [isEditUser])
-
-
-  const setUpdatedValue = (e: any) => {
-
-    console.log('testw')
-  }
+  }, [])
 
   const [currentPage, setCurrentPage] = useState(1);
   const [recordsPerPage] = useState(10);
@@ -141,6 +130,7 @@ const Dashboard = () => {
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
   const currentRecords = jsonData.slice(indexOfFirstRecord, indexOfLastRecord);
   const totalPages = Math.ceil(jsonData.length / recordsPerPage)
+
   return (
     <>
       {
@@ -202,9 +192,8 @@ const Dashboard = () => {
               setCurrentPage={setCurrentPage} />
 
             <EditRowModal handleShow={handleShow} show={show}
-              handleClose={handleClose} setUpdatedValue={setUpdatedValue}
-              setShow={setShow} handleUpdatedUser={handleUpdatedUser} setSelectedUser={setSelectedUser}
-              userDetails={userDetails} selectedUser={selectedUser}
+              handleClose={handleClose} setShow={setShow} handleUpdatedUser={handleUpdatedUser} setSelectedUser={setSelectedUser}
+              selectedUser={selectedUser}
             />
           </Container>
       }
