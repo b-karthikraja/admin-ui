@@ -81,10 +81,12 @@ const Dashboard = () => {
     const roleResults = filtered.filter((res: any) => res.role.toLowerCase().includes(result.toLowerCase()));
     if (nameResults.length > 0) {
       setJsonData([...nameResults])
-    } else if (emailResults.length > 0) {
-      setJsonData([...emailResults])
     } else {
-      setJsonData([...roleResults])
+      if (emailResults.length > 0) {
+        setJsonData([...emailResults])
+      } else {
+        setJsonData([...roleResults])
+      }
     }
   }, [result])
 
@@ -98,6 +100,7 @@ const Dashboard = () => {
   }
 
   const selectAllCheckbox = (e: any) => {
+    console.log(e)
     if (e.target.checked) {
       setCheckedAll(true)
     } else {
@@ -216,8 +219,12 @@ const Dashboard = () => {
                     controlId="exampleForm.ControlRadioarea"
                   >
                     <Form.Label>Role</Form.Label>
-                    <Form.Check className='text-capitalize' checked name='role' type="radio"
-                      label={selectedUser.role}
+                    <Form.Check className='text-capitalize' name='role' type="radio"
+                      label='Member' value='member' checked={selectedUser.role === 'member'}
+                      onChange={(e) => setSelectedUser({ ...selectedUser, role: e.target.value })}
+                    />
+                    <Form.Check className='text-capitalize' name='role' type="radio"
+                      label='Admin' value='admin' checked={selectedUser.role === 'admin'}
                       onChange={(e) => setSelectedUser({ ...selectedUser, role: e.target.value })}
                     />
                   </Form.Group>
