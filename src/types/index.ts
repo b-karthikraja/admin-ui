@@ -1,8 +1,6 @@
-export interface IEditRow {
-  data: any,
-  handleCheck: any,
-  setInputVal: any,
-  // editFunction: any, 
-  setEdit: (active: boolean) => void;
-  isEdit: boolean,
+export interface IMasterData {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
 }

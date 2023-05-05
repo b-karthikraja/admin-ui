@@ -5,7 +5,6 @@ const ModalComp = ({ ...props }) => {
   const { show, setShow, handleUpdatedUser, selectedUser, setSelectedUser } =
     props;
   const handleClose = () => setShow(false);
-  console.log(selectedUser, "sdfelc");
 
   return (
     <Modal show={show} onHide={handleClose}>
@@ -25,6 +24,7 @@ const ModalComp = ({ ...props }) => {
               onChange={(e) =>
                 setSelectedUser({ ...selectedUser, name: e.target.value })
               }
+              required
             />
           </Form.Group>
           <Form.Group className="mb-3" controlId="exampleForm.ControlTextarea">
@@ -40,13 +40,14 @@ const ModalComp = ({ ...props }) => {
                   email: e.target.value,
                 })
               }
+              required
             />
           </Form.Group>
           <Form.Group className="mb-3" controlId="exampleForm.ControlRadioarea">
             <Form.Label>Role</Form.Label>
             <Form.Check
               className="text-capitalize"
-              name="role"
+              name="role-member"
               type="radio"
               label="Member"
               value="member"
@@ -54,10 +55,11 @@ const ModalComp = ({ ...props }) => {
               onChange={(e) =>
                 setSelectedUser({ ...selectedUser, role: e.target.value })
               }
+              id="member"
             />
             <Form.Check
               className="text-capitalize"
-              name="role"
+              name="role-admin"
               type="radio"
               label="Admin"
               value="admin"
@@ -65,6 +67,7 @@ const ModalComp = ({ ...props }) => {
               onChange={(e) =>
                 setSelectedUser({ ...selectedUser, role: e.target.value })
               }
+              id="admin"
             />
           </Form.Group>
         </Modal.Body>

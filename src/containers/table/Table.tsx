@@ -9,16 +9,23 @@ const DataTable = ({ ...props }) => {
   const {
     editFunction,
     deleteFunction,
-    handleCheck,
     currentRecords,
-    selectAllCheckbox,
+    isAllSelected,
+    selected,
+    handleCheckboxChange,
+    jsonData,
   } = props;
   return (
-    <Table striped bordered hover className="text-center">
+    <Table bordered hover className="text-center">
       <thead>
         <tr>
           <th>
-            <Form.Check onChange={(e) => selectAllCheckbox(e)} />
+            <Form.Check
+              type="checkbox"
+              name="select-all"
+              checked={isAllSelected && selected.length > 0 ? true : false}
+              onChange={handleCheckboxChange}
+            />
           </th>
           {header.map((list) => (
             <th key={list.id}>{list.label}</th>
@@ -26,14 +33,20 @@ const DataTable = ({ ...props }) => {
         </tr>
       </thead>
       <tbody>
-        {currentRecords.length > 0 ? (
+        {jsonData.length > 0 ? (
           currentRecords.map((data: any) => {
             return (
-              <tr key={data.id}>
+              <tr
+                key={data.id}
+                style={{
+                  background: selected.includes(data) ? "#a6a6a669" : "#fff",
+                }}>
                 <td>
                   <Form.Check
-                    value={data.id}
-                    onChange={(e) => handleCheck(e)}
+                    type="checkbox"
+                    name="select"
+                    checked={selected.includes(data)}
+                    onChange={(event) => handleCheckboxChange(event, data)}
                   />
                 </td>
                 <td>{data.name}</td>

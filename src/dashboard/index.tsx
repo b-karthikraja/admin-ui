@@ -1,28 +1,41 @@
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { Button, Container, Form } from "react-bootstrap";
 import axios from "axios";
 import PaginationComp from "../containers/pagination";
-import Loader from "../containers/loader";
+import Loader from "../components/loader";
 import ModalComp from "../containers/modal/modal";
 import DataTable from "../containers/table/Table";
+import { IMasterData } from "../types";
 
 const Dashboard = () => {
-  const [jsonData, setJsonData] = useState<any>([]);
+  const [jsonData, setJsonData] = useState<IMasterData[]>([]);
   const [deleted, setDeleted] = useState(false);
-  const [checkedId, setCheckedId] = useState<any>([]);
-  const [enableDeleteAll, setEnableDeleteAll] = useState<boolean>(false);
   const [filtered, setFiltered] = useState([]);
   const [result, setResult] = useState("");
-  const [checkedAll, setCheckedAll] = useState<boolean>(false);
-
   const [currentPage, setCurrentPage] = useState(1);
   const [recordsPerPage] = useState(10);
-
   //Modal
   const [show, setShow] = useState(false);
 
   const [isLoading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<any>([]);
+  const [selected, setSelected] = useState<IMasterData[]>([]);
+
+  jsonData.sort(function (a: IMasterData, b: IMasterData) {
+    //Function for Sort Name wise
+    if (a.name < b.name) {
+      return -1;
+    }
+    if (a.name > b.name) {
+      return 1;
+    }
+    return 0;
+  });
+  //Pagination
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentRecords = jsonData.slice(indexOfFirstRecord, indexOfLastRecord);
+  const totalPages = Math.ceil(jsonData.length / recordsPerPage);
 
   useEffect(() => {
     axios
@@ -41,48 +54,23 @@ const Dashboard = () => {
       });
   }, []);
 
-  const deleteFunction = (id: number) => {
+  const deleteFunction = (id: string | number) => {
     setDeleted(!deleted);
     const getUsers = jsonData;
-    const filterUser = getUsers.filter((list: any) => list.id !== id);
+    const filterUser = getUsers.filter((list: IMasterData) => list.id !== id);
     setJsonData(filterUser);
+    setSelected(selected.filter((row: IMasterData) => row.id !== id));
   };
 
-  jsonData.sort(function (a: any, b: any) {
-    //Function for Sort Name wise
-    if (a.name < b.name) {
-      return -1;
-    }
-    if (a.name > b.name) {
-      return 1;
-    }
-    return 0;
-  });
-
-  const handleCheck = (event: any) => {
-    if (event.target.checked === true) {
-      setCheckedId((prev: any) => [...prev, event.target.checked]);
-    }
-  };
-
-  const handleDeleteSelected = (e: any) => {
-    const getUsers = jsonData;
-    const stringArray = checkedId;
-    const filteredUser = getUsers.filter((e: any) => {
-      return stringArray.indexOf(e.id) < 0;
-    });
-    setJsonData(filteredUser);
-  };
-
+  //For Search
   useEffect(() => {
-    //For Search
-    const nameResults = filtered.filter((res: any) =>
+    const nameResults = filtered.filter((res: IMasterData) =>
       res.name.toLowerCase().includes(result.toLowerCase())
     );
-    const emailResults = filtered.filter((res: any) =>
+    const emailResults = filtered.filter((res: IMasterData) =>
       res.email.toLowerCase().includes(result.toLowerCase())
     );
-    const roleResults = filtered.filter((res: any) =>
+    const roleResults = filtered.filter((res: IMasterData) =>
       res.role.toLowerCase().includes(result.toLowerCase())
     );
     if (nameResults.length > 0) {
@@ -94,27 +82,21 @@ const Dashboard = () => {
         setJsonData([...roleResults]);
       }
     }
-  }, [result]);
+  }, [result, filtered]);
 
-  const handleSearch = (e: any) => {
+  const handleSearch = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setResult(e.target.value);
   };
 
-  const editFunction = (data: any) => {
+  const editFunction = (data: IMasterData) => {
     setShow(!show);
     setSelectedUser(data);
   };
 
-  const selectAllCheckbox = (e: any) => {
-    if (e.target.checked) {
-      setCheckedAll(true);
-    } else {
-      setCheckedAll(false);
-    }
-  };
-
   const handleUpdatedUser = (e: any) => {
-    const newState = jsonData.map((obj: { id: number }) => {
+    const newState = jsonData.map((obj) => {
       if (obj.id === selectedUser?.id) {
         return selectedUser;
       }
@@ -125,11 +107,35 @@ const Dashboard = () => {
     e.preventDefault();
   };
 
-  //Pagination
-  const indexOfLastRecord = currentPage * recordsPerPage;
-  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-  const currentRecords = jsonData.slice(indexOfFirstRecord, indexOfLastRecord);
-  const totalPages = Math.ceil(jsonData.length / recordsPerPage);
+  const handleCheckboxChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    data: any
+  ) => {
+    if (event.target.name === "select-all") {
+      if (event.target.checked) {
+        setSelected(currentRecords);
+      } else {
+        setSelected([]);
+      }
+    } else {
+      if (event.target.checked) {
+        setSelected([...selected, data]);
+      } else {
+        setSelected(selected.filter((row: any) => row !== data));
+      }
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    if (selected.length === jsonData.length) {
+      setJsonData([]);
+    } else {
+      setJsonData(jsonData.filter((row: any) => !selected.includes(row)));
+    }
+    setSelected([]);
+  };
+  const isAllSelected = selected.length === currentRecords.length;
+
   return (
     <>
       {isLoading ? (
@@ -149,29 +155,31 @@ const Dashboard = () => {
               />
             </Form.Group>
           </Form>
-          {checkedId || checkedAll ? (
+          {selected.length > 0 && (
             <Button
               className="btn btn-danger mb-3"
-              onClick={(e) => {
-                handleDeleteSelected(e);
-              }}>
-              Delete Selected
+              onClick={handleDeleteSelected}>
+              Delete Selected ({selected.length})
             </Button>
-          ) : (
-            ""
           )}
           <DataTable
             editFunction={editFunction}
             deleteFunction={deleteFunction}
-            handleCheck={handleCheck}
             currentRecords={currentRecords}
-            selectAllCheckbox={selectAllCheckbox}
+            isAllSelected={isAllSelected}
+            selected={selected}
+            handleCheckboxChange={handleCheckboxChange}
+            jsonData={jsonData}
           />
-          <PaginationComp
-            totalPages={totalPages}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-          />
+          {jsonData.length ? (
+            <PaginationComp
+              totalPages={totalPages}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+            />
+          ) : (
+            <></>
+          )}
           <ModalComp
             show={show}
             setShow={setShow}
