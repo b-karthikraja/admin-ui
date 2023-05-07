@@ -138,11 +138,7 @@ const Dashboard = () => {
 
   return (
     <>
-      {isLoading ? (
-        <div className="spin-loader">
-          <Loader />
-        </div>
-      ) : (
+      {!isLoading ? (
         <Container>
           <Form>
             <Form.Group className="mb-3 mt-3">
@@ -188,6 +184,10 @@ const Dashboard = () => {
             setSelectedUser={setSelectedUser}
           />
         </Container>
+      ) : (
+        <div className="spin-loader">
+          <Loader />
+        </div>
       )}
     </>
   );
